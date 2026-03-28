@@ -44,7 +44,8 @@ function addFlowStep() {
             </div>
             <div class="input-group">
                 <label>WH Pressure (psig)</label>
-                <input type="number" step="0.01" placeholder="590" class="wh-pressure" id="whPressure${flowStepCount}">
+                <input type="number" step="0.01" placeholder="590" class="wh-pressure" id="whPressure${flowStepCount}" oninput="updateBargDisplay(this)">
+                <span class="barg-display" id="whPressureBarg${flowStepCount}">- barg</span>
             </div>
             <div class="input-group">
                 <label>WH Temp (°C)</label>
@@ -56,7 +57,8 @@ function addFlowStep() {
             </div>
             <div class="input-group">
                 <label>Choke d/s (psig)</label>
-                <input type="number" step="0.01" placeholder="413.06" class="choke-pressure" id="chokePressure${flowStepCount}">
+                <input type="number" step="0.01" placeholder="413.06" class="choke-pressure" id="chokePressure${flowStepCount}" oninput="updateBargDisplay(this)">
+                <span class="barg-display" id="chokePressureBarg${flowStepCount}">- barg</span>
             </div>
         </div>
     `;
@@ -113,6 +115,30 @@ function collectFlowStepData() {
     });
 
     return data;
+}
+
+/**
+ * Update barg display when psig input changes
+ */
+function updateBargDisplay(input) {
+    const psigValue = parseFloat(input.value);
+    const stepId = input.id.replace(/whPressure|chokePressure/, '');
+    let bargDisplayId = '';
+
+    if (input.id.includes('whPressure')) {
+        bargDisplayId = 'whPressureBarg' + stepId;
+    } else if (input.id.includes('chokePressure')) {
+        bargDisplayId = 'chokePressureBarg' + stepId;
+    }
+
+    const bargDisplay = document.getElementById(bargDisplayId);
+    if (bargDisplay) {
+        if (!isNaN(psigValue)) {
+            bargDisplay.textContent = psigToBarg(psigValue).toFixed(2) + ' barg';
+        } else {
+            bargDisplay.textContent = '- barg';
+        }
+    }
 }
 
 /**
