@@ -35,27 +35,27 @@ function addFlowStep() {
         </div>
         <div class="flow-step-grid">
             <div class="input-group">
-                <label>Flow Rate</label>
+                <label>Flow Rate (MMSCFD)</label>
                 <input type="number" step="0.0001" placeholder="15.01" class="flow-rate" id="flowRate${flowStepCount}">
             </div>
             <div class="input-group">
-                <label>Duration</label>
+                <label>Duration (hours)</label>
                 <input type="number" step="0.01" placeholder="8" class="duration" id="duration${flowStepCount}">
             </div>
             <div class="input-group">
-                <label>WH Pressure</label>
+                <label>WH Pressure (psig)</label>
                 <input type="number" step="0.01" placeholder="590" class="wh-pressure" id="whPressure${flowStepCount}">
             </div>
             <div class="input-group">
-                <label>WH Temp</label>
+                <label>WH Temp (°C)</label>
                 <input type="number" step="0.01" placeholder="43.15" class="wh-temp" id="whTemp${flowStepCount}">
             </div>
             <div class="input-group">
-                <label>BH Pressure</label>
+                <label>BH Pressure (psia)</label>
                 <input type="number" step="0.01" placeholder="680.89" class="bh-pressure" id="bhPressure${flowStepCount}">
             </div>
             <div class="input-group">
-                <label>Choke</label>
+                <label>Choke d/s (psig)</label>
                 <input type="number" step="0.01" placeholder="413.06" class="choke-pressure" id="chokePressure${flowStepCount}">
             </div>
         </div>
