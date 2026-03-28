@@ -1,6 +1,8 @@
 // Global variables
 let flowStepCount = 0;
 let chart = null;
+let performanceCoeffsPsig = null; // Store coefficients for psig
+let performanceCoeffsBarg = null; // Store coefficients for barg
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -125,8 +127,10 @@ function psigToBarg(psig) {
  * Perform quadratic regression to find coefficients a, b, c
  * for the equation: P = a*Q² + b*Q + c
  * where P = pressure and Q = flow rate
+ * @param {Array} data - Flow step data
+ * @param {string} pressureUnit - 'psig' or 'barg'
  */
-function calculateQuadraticRegression(data) {
+function calculateQuadraticRegression(data, pressureUnit = 'psig') {
     const n = data.length;
 
     if (n < 3) {
@@ -140,7 +144,8 @@ function calculateQuadraticRegression(data) {
 
     data.forEach(point => {
         const Q = point.flowRate;
-        const P = point.whPressure; // Using psig
+        // Use the appropriate pressure unit
+        const P = pressureUnit === 'barg' ? point.whPressureBarg : point.whPressure;
 
         sumQ += Q;
         sumQ2 += Q * Q;
@@ -200,12 +205,18 @@ function replaceColumn(matrix, newColumn, colIndex) {
 
 /**
  * Calculate R-squared value
+ * @param {Array} data - Flow step data
+ * @param {Object} coeffs - Coefficients (a, b, c)
+ * @param {string} pressureUnit - 'psig' or 'barg'
  */
-function calculateRSquared(data, coeffs) {
+function calculateRSquared(data, coeffs, pressureUnit = 'psig') {
     const { a, b, c } = coeffs;
 
+    // Get pressure values based on unit
+    const pressureKey = pressureUnit === 'barg' ? 'whPressureBarg' : 'whPressure';
+
     // Calculate mean of observed values
-    const meanP = data.reduce((sum, point) => sum + point.whPressure, 0) / data.length;
+    const meanP = data.reduce((sum, point) => sum + point[pressureKey], 0) / data.length;
 
     // Calculate sum of squares
     let ssTot = 0;
@@ -213,8 +224,8 @@ function calculateRSquared(data, coeffs) {
 
     data.forEach(point => {
         const predicted = a * point.flowRate * point.flowRate + b * point.flowRate + c;
-        ssTot += Math.pow(point.whPressure - meanP, 2);
-        ssRes += Math.pow(point.whPressure - predicted, 2);
+        ssTot += Math.pow(point[pressureKey] - meanP, 2);
+        ssRes += Math.pow(point[pressureKey] - predicted, 2);
     });
 
     return 1 - (ssRes / ssTot);
@@ -242,11 +253,18 @@ function populateResultsTable(data) {
 
 /**
  * Display coefficients
+ * @param {Object} coeffsPsig - PSIG coefficients
+ * @param {Object} coeffsBarg - BARG coefficients
  */
-function displayCoefficients(coeffs) {
-    document.getElementById('coeffA').textContent = coeffs.a.toFixed(6);
-    document.getElementById('coeffB').textContent = coeffs.b.toFixed(6);
-    document.getElementById('coeffC').textContent = coeffs.c.toFixed(6);
+function displayCoefficients(coeffsPsig, coeffsBarg) {
+    // Display PSIG coefficients (primary)
+    document.getElementById('coeffA').textContent = coeffsPsig.a.toFixed(6);
+    document.getElementById('coeffB').textContent = coeffsPsig.b.toFixed(6);
+    document.getElementById('coeffC').textContent = coeffsPsig.c.toFixed(6);
+
+    // Log both for reference
+    console.log('PSIG Coefficients:', coeffsPsig);
+    console.log('BARG Coefficients:', coeffsBarg);
 }
 
 /**
@@ -376,30 +394,86 @@ function calculate() {
         return;
     }
 
-    // Calculate coefficients using quadratic regression
-    const coeffs = calculateQuadraticRegression(data);
+    // Calculate coefficients for psig using quadratic regression
+    const coeffsPsig = calculateQuadraticRegression(data, 'psig');
 
-    if (!coeffs) {
+    if (!coeffsPsig) {
         return;
     }
 
-    // Calculate R-squared
-    const rSquared = calculateRSquared(data, coeffs);
+    // Calculate coefficients for barg using quadratic regression
+    const coeffsBarg = calculateQuadraticRegression(data, 'barg');
 
-    // Display results
-    displayCoefficients(coeffs);
+    if (!coeffsBarg) {
+        return;
+    }
+
+    // Store coefficients globally for calculator
+    performanceCoeffsPsig = coeffsPsig;
+    performanceCoeffsBarg = coeffsBarg;
+
+    // Calculate R-squared for psig
+    const rSquared = calculateRSquared(data, coeffsPsig, 'psig');
+
+    // Display results (show psig coefficients as primary)
+    displayCoefficients(coeffsPsig, coeffsBarg);
     populateResultsTable(data);
 
     // Show results section
     document.getElementById('resultsSection').style.display = 'block';
 
-    // Draw chart
-    drawChart(data, coeffs);
+    // Draw chart (using psig data)
+    drawChart(data, coeffsPsig);
 
     // Scroll to results
     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
 
     console.log('Calculation complete:');
-    console.log('Coefficients:', coeffs);
+    console.log('PSIG Coefficients:', coeffsPsig);
+    console.log('BARG Coefficients:', coeffsBarg);
     console.log('R²:', rSquared.toFixed(4));
+}
+
+/**
+ * Calculate pressure from flow rate using performance curve coefficients
+ */
+function calculatePressure() {
+    // Check if coefficients are available
+    if (!performanceCoeffsPsig || !performanceCoeffsBarg) {
+        alert('Please calculate the performance curve first by entering flow test data and clicking Calculate.');
+        return;
+    }
+
+    // Get input values
+    const flowRateInput = document.getElementById('calcFlowRate');
+    const flowUnitSelect = document.getElementById('calcFlowUnit');
+    const flowRate = parseFloat(flowRateInput.value);
+    const flowUnit = flowUnitSelect.value;
+
+    // Validate input
+    if (isNaN(flowRate) || flowRate < 0) {
+        alert('Please enter a valid flow rate (positive number)');
+        return;
+    }
+
+    // Convert to MMSCFD if in MMSCFH
+    let flowRateMMSCFD = flowRate;
+    if (flowUnit === 'MMSCFH') {
+        flowRateMMSCFD = flowRate / 24; // Convert hourly to daily
+    }
+
+    // Calculate pressure using SEPARATE coefficient sets for each unit
+    // This matches the Excel approach for better accuracy
+    const { a: a_psig, b: b_psig, c: c_psig } = performanceCoeffsPsig;
+    const { a: a_barg, b: b_barg, c: c_barg } = performanceCoeffsBarg;
+
+    const pressurePsig = a_psig * flowRateMMSCFD * flowRateMMSCFD + b_psig * flowRateMMSCFD + c_psig;
+    const pressureBarg = a_barg * flowRateMMSCFD * flowRateMMSCFD + b_barg * flowRateMMSCFD + c_barg;
+
+    // Display results
+    document.getElementById('resultPsig').textContent = pressurePsig.toFixed(2);
+    document.getElementById('resultBarg').textContent = pressureBarg.toFixed(2);
+    document.getElementById('calcResult').style.display = 'grid';
+
+    console.log(`Pressure calculation: ${flowRateMMSCFD.toFixed(4)} MMSCFD → ${pressurePsig.toFixed(2)} psig (${pressureBarg.toFixed(2)} barg)`);
 }

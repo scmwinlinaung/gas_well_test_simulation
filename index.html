@@ -110,6 +110,41 @@
                     </div>
                 </div>
 
+                <!-- Flow Rate Calculator -->
+                <div class="calculator-section">
+                    <h3>Flow Rate Calculator</h3>
+                    <p class="calc-hint">Enter any flow rate to calculate pressure</p>
+                    <div class="calculator-grid">
+                        <div class="calc-input-group">
+                            <label>Flow Rate</label>
+                            <input type="number" id="calcFlowRate" step="0.0001" placeholder="Enter flow rate">
+                        </div>
+                        <div class="calc-input-group">
+                            <label>Unit</label>
+                            <select id="calcFlowUnit">
+                                <option value="MMSCFD">MMSCFD</option>
+                                <option value="MMSCFH">MMSCFH</option>
+                            </select>
+                        </div>
+                        <div class="calc-input-group">
+                            <label>&nbsp;</label>
+                            <button class="btn-calculate" onclick="calculatePressure()">
+                                Calculate Pressure
+                            </button>
+                        </div>
+                    </div>
+                    <div class="calc-result" id="calcResult" style="display: none;">
+                        <div class="result-value">
+                            <span class="result-label">Pressure (psig)</span>
+                            <span class="result-number" id="resultPsig">-</span>
+                        </div>
+                        <div class="result-value">
+                            <span class="result-label">Pressure (barg)</span>
+                            <span class="result-number" id="resultBarg">-</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Results Table -->
                 <div class="table-section">
                     <h3>Test Summary</h3>
