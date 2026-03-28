@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Well Test Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>Well Test Calculator</h1>
+                <p>Performance curve analysis</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Well Info Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Well Information</h2>
+                </div>
+                <div class="info-grid">
+                    <div class="input-group">
+                        <label>Well Name</label>
+                        <input type="text" id="wellName" placeholder="YAD_1_H">
+                    </div>
+                    <div class="input-group">
+                        <label>Producing Zone</label>
+                        <input type="text" id="producingZone" placeholder="YADANA">
+                    </div>
+                    <div class="input-group">
+                        <label>Test Date</label>
+                        <input type="datetime-local" id="testDate">
+                    </div>
+                    <div class="input-group">
+                        <label>Shut-In Pressure</label>
+                        <input type="number" id="shutInPressure" step="0.01" placeholder="620">
+                    </div>
+                    <div class="input-group">
+                        <label>Shut-In Temperature</label>
+                        <input type="number" id="shutInTemp" step="0.01" placeholder="27">
+                    </div>
+                    <div class="input-group">
+                        <label>Bottom Hole Pressure</label>
+                        <input type="number" id="bhsip" step="0.01" placeholder="706.16">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flow Steps Section -->
+            <section class="section">
+                <div class="section-header">
+                    <h2>Flow Test Data</h2>
+                    <span class="hint">Minimum 2 steps</span>
+                </div>
+
+                <div class="steps-wrapper">
+                    <div class="flow-steps" id="flowStepsContainer">
+                        <!-- Flow steps added dynamically -->
+                    </div>
+
+                    <div class="steps-actions">
+                        <button class="btn-icon" onclick="addFlowStep()" title="Add step">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add Step
+                        </button>
+                        <button class="btn-icon btn-icon-danger" onclick="clearFlowSteps()" title="Clear all">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calculate Button -->
+            <div class="action-bar">
+                <button class="btn-primary" onclick="calculate()">
+                    Calculate
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <section class="results" id="resultsSection" style="display: none;">
+                <!-- Coefficients -->
+                <div class="coefficients">
+                    <h3>Performance Curve</h3>
+                    <div class="equation">P = a·Q² + b·Q + c</div>
+                    <div class="coeffs-grid">
+                        <div class="coeff-item">
+                            <span class="coeff-label">a</span>
+                            <span class="coeff-value" id="coeffA">-</span>
+                        </div>
+                        <div class="coeff-item">
+                            <span class="coeff-label">b</span>
+                            <span class="coeff-value" id="coeffB">-</span>
+                        </div>
+                        <div class="coeff-item">
+                            <span class="coeff-label">c</span>
+                            <span class="coeff-value" id="coeffC">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="table-section">
+                    <h3>Test Summary</h3>
+                    <div class="table-wrapper">
+                        <table id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>Flow Rate</th>
+                                    <th>WH Pressure</th>
+                                    <th>BH Pressure</th>
+                                    <th>Choke</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-section">
+                    <h3>Performance Curve</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
